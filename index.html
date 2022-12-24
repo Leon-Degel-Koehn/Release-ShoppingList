@@ -1,83 +1,42 @@
 <!DOCTYPE html>
+<!--This is a single file project because it is intended to be easily run on any device without any weird dependencies or potential for bugs-->
 <html>
     <head>
-        <style>
-            div {
-                height: 100vh;
-                width: 100vw;
-            }
-        </style>
+        <meta charset="utf-8">
+        <title>Einkaufsliste</title>
+        <link rel="stylesheet" href="style.css">
     </head>
     <body>
 
+        <div id="mainDiv" class="center">
+            <!-- table goes in here -->
+        </div>
+        <button class="center button-56" id="btnAddRow">Neuer Artikel manuell</button>
+        <button class="center button-56" id="btnScanItem">Neuer Artikel Barcode</button>
         <div id="displayDiv"></div>
-        
-        <script src="quagga.min.js"></script>
-        
+
+        <!-- using sheet api -->
+        <!--<script src="//sheetdb.io/api/js"></script> here we localized the file because the online import doesnt seem to work in a local setting-->
+        <script src="./sheetdb.js"></script>
+        <!--database management-->
+        <script src="./DatabaseManagement.js"></script>
+        <!-- barcode scanning library -->
+        <script src="./quagga.min.js"></script>
+        <!-- decoding barcode numbers -->
+        <script src="./productFinder.js"></script>
+
+
+
+        <!--main script-->
+        <script src="./main.js"></script>
+
+        <!-- scanning barcodes actual implementation -->
+        <script src="./quaggaScanner.js"></script>
+
         <script>
-
-            async function getProductFromCode(barcode) {
-                //nach q= kommt der barcode
-                let text = await fetch(`https://api.codetabs.com/v1/proxy?quest=https://go-upc.com/search?q=${barcode}`)
-                .then((response) => response.text());
-                let myRegex = /<h1.*class="product-name".*>/;
-                if(text.indexOf("Sorry, we were not able to find a product") >= 0)
-                    return "leider ein unbekannter Artikel";
-                let res = text.match(myRegex)[0];
-                let ind1 = res.indexOf('>');
-                text = res.substring(ind1+1, res.indexOf('<', ind1));
-                return text;
-            }
-
-
+            document.getElementById('btnScanItem').onclick = runQuagga;
         </script>
-        <script>
+        
 
-            let width = window.innerWidth
-            || document.documentElement.clientWidth
-            || document.body.clientWidth;
-
-            let height = window.innerHeight
-            || document.documentElement.clientHeight
-            || document.body.clientHeight;
-
-            Quagga.init({
-                inputStream : {
-                    name : "Live",
-                    type : "LiveStream",
-                    target: document.getElementById('displayDiv'), 
-                    constraints: {
-                        'height': height,
-                        'width': height
-                    }
-                },
-                decoder : {
-                    readers : ["ean_reader", "code_128_reader", "code_39_reader"]
-                }
-            }, function(err) {
-                if (err) {
-                    console.log(err);
-                    return
-                }
-                console.log("Initialization finished. Ready to start");
-
-                Quagga.start();
-            });
-
-            
-            Quagga.onDetected((data) => {
-                
-                //we have detected a barcode in the livestream
-                const barcode = data["codeResult"]["code"];
-                console.log("detected barcode");
-                (async () => {
-                    let text = await getProductFromCode(barcode);
-                    alert(text);
-                })();
-            });
-            
-
-
-        </script>
     </body>
 </html>
